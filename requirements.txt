@@ -2,3 +2,8 @@ scikit-learn
 pandas
 xgboost
 imblearn
+sqlalchemy
+fastapi
+uvicorn
+pydantic
+python-multipart

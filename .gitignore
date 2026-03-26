@@ -2,3 +2,5 @@ Model/*.pkl
 Model/*.joblib
 Data/*.csv
 venv/
+q.ipynb
+test_batch.csv
