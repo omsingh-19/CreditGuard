@@ -1,7 +1,7 @@
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import declarative_base , sessionmaker
 
-URL = "sqlite:///./CreditGurad.db"
+URL = "sqlite:///./CreditGuard.db"
 
 engine = create_engine(URL,connect_args={"check_same_thread": False})
 

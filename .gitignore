@@ -3,4 +3,11 @@ Model/*.joblib
 Data/*.csv
 venv/
 q.ipynb
+test.ipynb
 test_batch.csv
+*.db
+*.sqlite
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env

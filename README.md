@@ -65,13 +65,10 @@ CreditGuard/
 ├── data/raw/               # Dataset (not committed)
 ├── notebooks/
 │   └── credit_eda.ipynb    # Exploratory data analysis
-|   └── test.ipynb          # dummy test notebook
 │
 ├── Model/                  # Saved model files (not committed)
 │   ├── credit_pipeline.pkl
 │   └── threshold.pkl
-│
-├── ml/
 │   └── train.py            # Model training script
 │
 ├── Api/
