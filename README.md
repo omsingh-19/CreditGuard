@@ -190,6 +190,7 @@ This will clean the data, train a new XGBoost pipeline with SMOTE, find the opti
 ## Author
 
 **Om Singh Lodhi**
+
 1st Year AI-DS Student — SDSF, DAVV, Indore
 
 
