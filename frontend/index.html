@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CreditGuard — Risk Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0f;
+    --bg2: #0d1117;
+    --bg3: #111620;
+    --border: #1e2535;
+    --border2: #252f42;
+    --accent: #00e5ff;
+    --accent2: #0099bb;
+    --red: #ff3b5c;
+    --yellow: #ffb800;
+    --green: #00e676;
+    --text: #e8edf5;
+    --text2: #7a8aa0;
+    --text3: #4a5568;
+    --glow: 0 0 20px rgba(0,229,255,0.15);
+    --glow-strong: 0 0 40px rgba(0,229,255,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 60% 20%, rgba(0,229,255,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 80%, rgba(255,59,92,0.03) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: rgba(8,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .nav-logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .nav-logo-icon::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: var(--bg);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  .nav-tab {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text2);
+    border: none;
+    background: transparent;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .nav-tab.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .nav-tab:not(.active):hover {
+    color: var(--text);
+    background: var(--border);
+  }
+
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 80px 40px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* PAGES */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-bottom: 32px;
+    padding-top: 24px;
+  }
+
+  .page-label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .page-title {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+
+  .page-title span { color: var(--accent); }
+
+  .page-subtitle {
+    margin-top: 8px;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .card-value {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* GRID LAYOUTS */
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* FORM */
+  .form-section-title {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-group label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .form-group input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+  }
+
+  .form-group input::placeholder { color: var(--text3); }
+
+  /* BUTTONS */
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover {
+    background: #33eaff;
+    box-shadow: var(--glow-strong);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  /* RESULT PANEL */
+  .result-panel {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: none;
+  }
+
+  .result-panel.visible { display: block; animation: fadeIn 0.4s ease; }
+
+  .result-score-ring {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    margin: 0 auto 20px;
+  }
+
+  .result-score-ring svg {
+    transform: rotate(-90deg);
+    width: 120px;
+    height: 120px;
+  }
+
+  .result-score-ring .track {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 8;
+  }
+
+  .result-score-ring .fill {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 289;
+    stroke-dashoffset: 289;
+    transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1), stroke 0.3s;
+  }
+
+  .result-score-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .result-score-text .score-num {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .result-score-text .score-label {
+    font-size: 9px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .result-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-low { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+  .badge-medium { background: rgba(255,184,0,0.12); color: var(--yellow); border: 1px solid rgba(255,184,0,0.2); }
+  .badge-high { background: rgba(255,59,92,0.12); color: var(--red); border: 1px solid rgba(255,59,92,0.2); }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .result-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .result-item-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .result-item-value {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* TABLE */
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead tr {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .table-empty {
+    text-align: center;
+    padding: 48px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* METRICS PAGE */
+  .metric-bar-wrap {
+    margin-top: 8px;
+  }
+
+  .metric-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .metric-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .metric-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    width: 0;
+  }
+
+  /* BATCH PAGE */
+  .drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg3);
+  }
+
+  .drop-zone:hover, .drop-zone.dragging {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.03);
+  }
+
+  .drop-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .drop-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .drop-sub {
+    font-size: 13px;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+
+  .loading.visible { display: flex; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+
+  /* UPLOAD HIDDEN */
+  #fileInput { display: none; }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+    margin: 32px 0;
+  }
+
+  /* ACCENT CARD */
+  .accent-card {
+    background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(0,229,255,0.02));
+    border: 1px solid rgba(0,229,255,0.15);
+  }
+
+  .info-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .info-row .dot {
+    color: var(--accent);
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .form-grid { grid-template-columns: 1fr; }
+    nav { padding: 0 20px; }
+    main { padding: 80px 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon"></div>
+    CREDITGUARD
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('predict')">Predict</button>
+    <button class="nav-tab" onclick="showPage('batch')">Batch</button>
+    <button class="nav-tab" onclick="showPage('history')">History</button>
+    <button class="nav-tab" onclick="showPage('metrics')">Metrics</button>
+  </div>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    API ONLINE
+  </div>
+</nav>
+
+<main>
+
+  <!-- PREDICT PAGE -->
+  <div class="page active" id="page-predict">
+    <div class="page-header">
+      <div class="page-label">// SINGLE PREDICTION</div>
+      <h1 class="page-title">Credit Risk <span>Assessment</span></h1>
+      <p class="page-subtitle">Enter applicant details to generate an instant risk score</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="form-section-title">// PERSONAL INFO</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" id="age" placeholder="45" min="18" max="100">
+          </div>
+          <div class="form-group">
+            <label>Monthly Income ($)</label>
+            <input type="number" id="income" placeholder="5000" min="0">
+          </div>
+          <div class="form-group">
+            <label>Dependents</label>
+            <input type="number" id="dependents" placeholder="2" min="0" max="20">
+          </div>
+          <div class="form-group">
+            <label>Debt Ratio</label>
+            <input type="number" id="debt_ratio" placeholder="0.35" min="0" max="1" step="0.01">
+          </div>
+        </div>
+
+        <div class="form-section-title">// CREDIT PROFILE</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Revolving Utilization</label>
+            <input type="number" id="revolving_utilization" placeholder="0.5" min="0" max="1" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Open Credit Lines</label>
+            <input type="number" id="num_open_credit_lines" placeholder="4" min="0">
+          </div>
+          <div class="form-group">
+            <label>Real Estate Loans</label>
+            <input type="number" id="num_real_estate_loans" placeholder="1" min="0">
+          </div>
+          <div class="form-group">
+            <label>30-59 Days Late</label>
+            <input type="number" id="num_late_30_59" placeholder="0" min="0" max="10">
+          </div>
+          <div class="form-group">
+            <label>60-89 Days Late</label>
+            <input type="number" id="num_late_60_89" placeholder="0" min="0" max="10">
+          </div>
+          <div class="form-group">
+            <label>90+ Days Late</label>
+            <input type="number" id="num_late_90" placeholder="0" min="0" max="10">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="runPrediction()">
+            <span>▶</span> RUN ANALYSIS
+          </button>
+          <button class="btn-secondary" onclick="fillDemo()">Load Demo</button>
+          <div class="loading" id="predict-loading">
+            <div class="spinner"></div> ANALYZING...
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="result-panel" id="result-panel">
+          <div class="card-label">RISK ASSESSMENT RESULT</div>
+          <div class="result-score-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="track" cx="60" cy="60" r="46"/>
+              <circle class="fill" id="score-ring-fill" cx="60" cy="60" r="46"/>
+            </svg>
+            <div class="result-score-text">
+              <div class="score-num" id="score-num">0.00</div>
+              <div class="score-label">RISK SCORE</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin-bottom: 20px;">
+            <div class="result-badge" id="result-badge">—</div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-item">
+              <div class="result-item-label">PREDICTION</div>
+              <div class="result-item-value" id="res-prediction">—</div>
+            </div>
+            <div class="result-item">
+              <div class="result-item-label">THRESHOLD</div>
+              <div class="result-item-value" id="res-threshold">—</div>
+            </div>
+            <div class="result-item">
+              <div class="result-item-label">PROBABILITY</div>
+              <div class="result-item-value" id="res-prob">—</div>
+            </div>
+            <div class="result-item">
+              <div class="result-item-label">STATUS</div>
+              <div class="result-item-value" id="res-status">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="empty-result-card" style="height: 100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height: 300px;">
+          <div style="font-size: 48px; opacity: 0.1;">◈</div>
+          <div style="color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: center;">
+            Fill in applicant details<br>and run analysis
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATCH PAGE -->
+  <div class="page" id="page-batch">
+    <div class="page-header">
+      <div class="page-label">// BATCH PROCESSING</div>
+      <h1 class="page-title">Bulk <span>Risk Scoring</span></h1>
+      <p class="page-subtitle">Upload a CSV file to score multiple applicants at once</p>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('fileInput').click()"
+               ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <div class="drop-icon">⬆</div>
+            <div class="drop-title">Drop CSV file here</div>
+            <div class="drop-sub">or click to browse · max 10MB</div>
+          </div>
+          <input type="file" id="fileInput" accept=".csv" onchange="handleFileSelect(event)">
+
+          <div style="margin-top: 16px;" class="btn-row">
+            <button class="btn-primary" onclick="runBatch()" id="batch-btn" style="display:none">
+              <span>▶</span> PROCESS BATCH
+            </button>
+            <div class="loading" id="batch-loading">
+              <div class="spinner"></div> PROCESSING...
+            </div>
+          </div>
+        </div>
+
+        <div class="card accent-card">
+          <div class="card-label">REQUIRED CSV COLUMNS</div>
+          <div style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2); line-height: 2;">
+            RevolvingUtilizationOfUnsecuredLines<br>
+            age · MonthlyIncome · DebtRatio<br>
+            NumberOfOpenCreditLinesAndLoans<br>
+            NumberRealEstateLoansOrLines<br>
+            NumberOfTime30-59DaysPastDueNotWorse<br>
+            NumberOfTime60-89DaysPastDueNotWorse<br>
+            NumberOfTimes90DaysLate · NumberOfDependents
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">BATCH RESULTS</div>
+        <div id="batch-results-wrap">
+          <div class="table-empty">No batch processed yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div class="page" id="page-history">
+    <div class="page-header">
+      <div class="page-label">// PREDICTION LOG</div>
+      <h1 class="page-title">Assessment <span>History</span></h1>
+      <p class="page-subtitle">All past credit risk predictions stored in the database</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <div style="display:flex; gap: 12px; align-items: center;">
+        <label style="font-size:12px; font-family: 'JetBrains Mono', monospace; color: var(--text2);">LIMIT</label>
+        <select id="history-limit" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none;">
+          <option value="5">5 records</option>
+          <option value="10" selected>10 records</option>
+          <option value="25">25 records</option>
+          <option value="50">50 records</option>
+        </select>
+        <button class="btn-primary" onclick="loadHistory()" style="padding: 8px 18px; font-size: 12px;">
+          REFRESH
+        </button>
+        <div class="loading" id="history-loading">
+          <div class="spinner"></div> LOADING...
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#ID</th>
+            <th>AGE</th>
+            <th>INCOME</th>
+            <th>RISK SCORE</th>
+            <th>LABEL</th>
+            <th>PREDICTION</th>
+            <th>THRESHOLD</th>
+            <th>TIMESTAMP</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="8" class="table-empty">Click REFRESH to load history</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- METRICS PAGE -->
+  <div class="page" id="page-metrics">
+    <div class="page-header">
+      <div class="page-label">// MODEL PERFORMANCE</div>
+      <h1 class="page-title">Model <span>Metrics</span></h1>
+      <p class="page-subtitle">Current production model performance statistics</p>
+    </div>
+
+    <div class="grid-4" id="metrics-cards">
+      <div class="card">
+        <div class="card-label">AUC-ROC</div>
+        <div class="card-value" id="m-auc">—</div>
+        <div class="card-sub">Area under curve</div>
+      </div>
+      <div class="card">
+        <div class="card-label">THRESHOLD</div>
+        <div class="card-value" id="m-threshold">—</div>
+        <div class="card-sub">Decision boundary</div>
+      </div>
+      <div class="card">
+        <div class="card-label">TRAIN SAMPLES</div>
+        <div class="card-value" id="m-train">—</div>
+        <div class="card-sub">After SMOTE</div>
+      </div>
+      <div class="card">
+        <div class="card-label">TEST SAMPLES</div>
+        <div class="card-value" id="m-test">—</div>
+        <div class="card-sub">Held-out set</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label">MODEL DETAILS</div>
+        <div style="margin-top: 16px;">
+          <div class="info-row">
+            <span class="dot">▸</span>
+            <span><strong style="color:var(--text)">Algorithm:</strong> XGBoost Classifier</span>
+          </div>
+          <div class="info-row">
+            <span class="dot">▸</span>
+            <span><strong style="color:var(--text)">Dataset:</strong> <span id="m-dataset">—</span></span>
+          </div>
+          <div class="info-row">
+            <span class="dot">▸</span>
+            <span><strong style="color:var(--text)">Preprocessing:</strong> StandardScaler + ColumnTransformer</span>
+          </div>
+          <div class="info-row">
+            <span class="dot">▸</span>
+            <span><strong style="color:var(--text)">Imbalance handling:</strong> SMOTE oversampling</span>
+          </div>
+          <div class="info-row">
+            <span class="dot">▸</span>
+            <span><strong style="color:var(--text)">Threshold tuning:</strong> Precision-recall curve optimization</span>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="card-label">RISK LABEL THRESHOLDS</div>
+        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <div class="result-badge badge-low">LOW &lt; 0.30</div>
+          <div class="result-badge badge-medium">MEDIUM 0.30–0.60</div>
+          <div class="result-badge badge-high">HIGH &gt; 0.60</div>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace;">
+          ⚠ Medium label with prediction=0 is expected when probability is above 0.30 but below the decision threshold.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">PERFORMANCE INDICATORS</div>
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 20px;" id="perf-bars">
+          <div>
+            <div class="metric-bar-label"><span>AUC-ROC Score</span><span id="bar-auc-label">—</span></div>
+            <div class="metric-bar"><div class="metric-bar-fill" id="bar-auc" style="background: var(--accent);"></div></div>
+          </div>
+          <div>
+            <div class="metric-bar-label"><span>Model Confidence</span><span>83%</span></div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="background: var(--green); width: 83%;"></div></div>
+          </div>
+          <div>
+            <div class="metric-bar-label"><span>Data Coverage</span><span>93%</span></div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="background: var(--yellow); width: 93%;"></div></div>
+          </div>
+          <div>
+            <div class="metric-bar-label"><span>Minority Class F1</span><span>45%</span></div>
+            <div class="metric-bar"><div class="metric-bar-fill" style="background: var(--red); width: 45%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:8000';
+
+  // PAGE ROUTING
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'metrics') loadMetrics();
+  }
+
+  // TOAST
+  function toast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = (type === 'error' ? '✗ ' : '✓ ') + msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // DEMO DATA
+  function fillDemo() {
+    document.getElementById('age').value = 45;
+    document.getElementById('income').value = 5200;
+    document.getElementById('dependents').value = 2;
+    document.getElementById('debt_ratio').value = 0.38;
+    document.getElementById('revolving_utilization').value = 0.62;
+    document.getElementById('num_open_credit_lines').value = 5;
+    document.getElementById('num_real_estate_loans').value = 1;
+    document.getElementById('num_late_30_59').value = 1;
+    document.getElementById('num_late_60_89').value = 0;
+    document.getElementById('num_late_90').value = 0;
+    toast('Demo data loaded');
+  }
+
+  // SINGLE PREDICT
+  async function runPrediction() {
+    const fields = ['age','income','debt_ratio','revolving_utilization',
+                    'num_open_credit_lines','num_real_estate_loans',
+                    'num_late_30_59','num_late_60_89','num_late_90','dependents'];
+    const body = {};
+    for (const f of fields) {
+      const v = document.getElementById(f).value;
+      if (v === '') { toast('Please fill all fields', 'error'); return; }
+      body[f] = parseFloat(v);
+    }
+
+    const loading = document.getElementById('predict-loading');
+    loading.classList.add('visible');
+
+    try {
+      const res = await fetch(API + '/credit/predict', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const data = await res.json();
+      showResult(data);
+      toast('Analysis complete');
+    } catch(e) {
+      toast('Failed to connect to API. Is the server running?', 'error');
+    } finally {
+      loading.classList.remove('visible');
+    }
+  }
+
+  function showResult(data) {
+    document.getElementById('empty-result-card').style.display = 'none';
+    const panel = document.getElementById('result-panel');
+    panel.classList.add('visible');
+
+    const score = data.risk_score;
+    const pct = Math.round(score * 100);
+
+    // Ring animation
+    const circumference = 289;
+    const offset = circumference - (score * circumference);
+    const fill = document.getElementById('score-ring-fill');
+    const color = score > 0.6 ? '#ff3b5c' : score > 0.3 ? '#ffb800' : '#00e676';
+    fill.style.stroke = color;
+    fill.style.strokeDashoffset = offset;
+
+    document.getElementById('score-num').textContent = score.toFixed(3);
+    document.getElementById('score-num').style.color = color;
+
+    const badge = document.getElementById('result-badge');
+    badge.textContent = data.risk_label.toUpperCase() + ' RISK';
+    badge.className = 'result-badge badge-' + data.risk_label.toLowerCase();
+
+    document.getElementById('res-prediction').textContent = data.prediction === 1 ? 'DEFAULT' : 'NO DEFAULT';
+    document.getElementById('res-prediction').style.color = data.prediction === 1 ? '#ff3b5c' : '#00e676';
+    document.getElementById('res-threshold').textContent = data.threshold_used.toFixed(4);
+    document.getElementById('res-prob').textContent = (score * 100).toFixed(1) + '%';
+    document.getElementById('res-status').textContent = data.prediction === 1 ? 'HIGH RISK' : 'APPROVED';
+    document.getElementById('res-status').style.color = data.prediction === 1 ? '#ff3b5c' : '#00e676';
+  }
+
+  // HISTORY
+  async function loadHistory() {
+    const limit = document.getElementById('history-limit').value;
+    const loading = document.getElementById('history-loading');
+    loading.classList.add('visible');
+    const tbody = document.getElementById('history-tbody');
+
+    try {
+      const res = await fetch(API + '/credit/history?limit=' + limit);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No predictions yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(r => {
+        const labelClass = r.risk_label === 'High' ? 'high' : r.risk_label === 'Medium' ? 'medium' : 'low';
+        const color = r.risk_label === 'High' ? '#ff3b5c' : r.risk_label === 'Medium' ? '#ffb800' : '#00e676';
+        const date = new Date(r.created_at).toLocaleString();
+        return `<tr>
+          <td style="color:var(--accent)">#${r.id}</td>
+          <td>${r.age}</td>
+          <td>$${r.income?.toLocaleString() || '—'}</td>
+          <td style="color:${color}">${(r.risk_score * 100).toFixed(1)}%</td>
+          <td><span class="result-badge badge-${labelClass}" style="padding:3px 10px; font-size:11px">${r.risk_label}</span></td>
+          <td style="color:${r.prediction===1?'#ff3b5c':'#00e676'}">${r.prediction === 1 ? 'DEFAULT' : 'PASS'}</td>
+          <td style="color:var(--text3)">${r.threshold_used?.toFixed(4) || '—'}</td>
+          <td style="color:var(--text3); font-size:11px">${date}</td>
+        </tr>`;
+      }).join('');
+
+      toast('Loaded ' + data.length + ' records');
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Failed to load. Is the API running?</td></tr>';
+      toast('Failed to load history', 'error');
+    } finally {
+      loading.classList.remove('visible');
+    }
+  }
+
+  // METRICS
+  async function loadMetrics() {
+    try {
+      const res = await fetch(API + '/credit/model/metrics');
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      document.getElementById('m-auc').textContent = data.auc_roc;
+      document.getElementById('m-threshold').textContent = data.threshold?.toFixed(4) || data.threshold;
+      document.getElementById('m-train').textContent = data.train_samples?.toLocaleString();
+      document.getElementById('m-test').textContent = data.test_samples?.toLocaleString();
+      document.getElementById('m-dataset').textContent = data.dataset;
+
+      // Animate bar
+      setTimeout(() => {
+        const pct = (data.auc_roc * 100).toFixed(1);
+        document.getElementById('bar-auc').style.width = pct + '%';
+        document.getElementById('bar-auc-label').textContent = pct + '%';
+      }, 200);
+
+    } catch(e) {
+      toast('Failed to load metrics', 'error');
+    }
+  }
+
+  // BATCH
+  let selectedFile = null;
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.add('dragging');
+  }
+
+  function handleDragLeave(e) {
+    document.getElementById('drop-zone').classList.remove('dragging');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      selectedFile = file;
+      document.querySelector('.drop-title').textContent = '📄 ' + file.name;
+      document.getElementById('batch-btn').style.display = 'flex';
+      toast('File selected: ' + file.name);
+    } else {
+      toast('Please upload a CSV file', 'error');
+    }
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+      selectedFile = file;
+      document.querySelector('.drop-title').textContent = '📄 ' + file.name;
+      document.getElementById('batch-btn').style.display = 'flex';
+      toast('File selected: ' + file.name);
+    }
+  }
+
+  async function runBatch() {
+    if (!selectedFile) { toast('No file selected', 'error'); return; }
+    const loading = document.getElementById('batch-loading');
+    loading.classList.add('visible');
+    document.getElementById('batch-btn').style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res = await fetch(API + '/credit/predict/batch', {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const data = await res.json();
+
+      const wrap = document.getElementById('batch-results-wrap');
+      if (!data.length) { wrap.innerHTML = '<div class="table-empty">No results returned</div>'; return; }
+
+      const summary = {
+        low: data.filter(d => d.risk_label === 'Low').length,
+        medium: data.filter(d => d.risk_label === 'Medium').length,
+        high: data.filter(d => d.risk_label === 'High').length,
+      };
+
+      wrap.innerHTML = `
+        <div style="display:flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+          <span class="result-badge badge-low">LOW: ${summary.low}</span>
+          <span class="result-badge badge-medium">MEDIUM: ${summary.medium}</span>
+          <span class="result-badge badge-high">HIGH: ${summary.high}</span>
+          <span style="font-size:12px; color:var(--text2); font-family: 'JetBrains Mono', monospace; align-self:center;">
+            ${data.length} total
+          </span>
+        </div>
+        <div style="overflow-x:auto; border-radius: 8px; border: 1px solid var(--border);">
+          <table>
+            <thead><tr><th>#</th><th>RISK SCORE</th><th>LABEL</th><th>PREDICTION</th></tr></thead>
+            <tbody>
+              ${data.map((r, i) => {
+                const lc = r.risk_label === 'High' ? 'high' : r.risk_label === 'Medium' ? 'medium' : 'low';
+                const color = r.risk_label === 'High' ? '#ff3b5c' : r.risk_label === 'Medium' ? '#ffb800' : '#00e676';
+                return `<tr>
+                  <td style="color:var(--accent)">${i+1}</td>
+                  <td style="color:${color}">${(r.risk_score * 100).toFixed(1)}%</td>
+                  <td><span class="result-badge badge-${lc}" style="padding:2px 8px; font-size:11px">${r.risk_label}</span></td>
+                  <td style="color:${r.prediction===1?'#ff3b5c':'#00e676'}">${r.prediction === 1 ? 'DEFAULT' : 'PASS'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+
+      toast(data.length + ' applicants scored');
+    } catch(e) {
+      toast('Batch processing failed. Check API.', 'error');
+    } finally {
+      loading.classList.remove('visible');
+      document.getElementById('batch-btn').style.display = 'flex';
+    }
+  }
+</script>
+</body>
+</html>
