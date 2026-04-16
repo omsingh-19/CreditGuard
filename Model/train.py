@@ -8,9 +8,10 @@ from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import classification_report, roc_auc_score,precision_recall_curve
 import joblib
+from Api.config import settings
 
 def clean_data():
-    df = pd.read_csv("Data/cs-training.csv")
+    df = pd.read_csv("Data/raw/cs-training.csv")
     df.drop(columns=["Unnamed: 0"],inplace=True)
 
     df["MonthlyIncome"]=df["MonthlyIncome"].fillna(df["MonthlyIncome"].median())
@@ -81,8 +82,8 @@ def Train_Model():
 
 
     #Saving Model
-    joblib.dump(pipeline, 'Model/credit_pipeline.pkl')
-    joblib.dump(best_threshold, 'Model/threshold.pkl')
+    joblib.dump(pipeline, settings.model_path)
+    joblib.dump(best_threshold, settings.threshold_path)
     print("Model Saved Successfully")
 
 if __name__ == "__main__":

@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session
 from Api.db.session import get_db
 from Api.db.models import CreditPrediction
 from Api.schema.credit import CreditInput ,CreditResponse ,CreditHistoryResponse
+from Api.config import settings
 import os
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model = joblib.load(os.path.join(BASE_DIR, '../../Model/credit_pipeline.pkl'))
-threshold = joblib.load(os.path.join(BASE_DIR, '../../Model/threshold.pkl'))
+model = joblib.load(settings.model_path)
+threshold = joblib.load(settings.threshold_path)
 
 def get_prediction(input_data : CreditInput)->CreditResponse:
 
