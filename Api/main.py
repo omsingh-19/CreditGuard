@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 from Api.routes.credit import router as credit_router
-from Api.db.session import Base ,engine
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from Api.routes.auth import router as auth_router
 
 
-Base.metadata.create_all(bind = engine)
 app = FastAPI(
     title="CreditGuard API",
     description="Credit Risk Scoring API",
@@ -21,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(credit_router)
+app.include_router(auth_router)
 
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 

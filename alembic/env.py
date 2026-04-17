@@ -5,7 +5,7 @@ import asyncio
 
 from Api.db.session import Base, engine
 from Api.config import settings
-
+from Api.db.models import CreditPrediction, User  # noqa: F401  
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 

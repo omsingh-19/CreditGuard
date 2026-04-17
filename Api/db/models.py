@@ -1,4 +1,4 @@
-from sqlalchemy import Column , Integer, DateTime,Float ,String
+from sqlalchemy import Column , Integer, DateTime,Float ,String , Boolean
 from sqlalchemy.sql import func
 from Api.db.session import Base
 
@@ -21,3 +21,15 @@ class CreditPrediction(Base):
     threshold_used = Column(Float)
     prediction = Column(Integer)
     created_at = Column(DateTime, default=func.now())
+
+class User(Base):
+
+    __tablename__ = "user"
+
+    id = Column(Integer , primary_key=True , index= True)
+    email = Column(String , nullable= False, unique=True)
+    hashed_password = Column(String , nullable= False)
+
+    is_active = Column(Boolean , default= True)
+    is_verified = Column(Boolean , default=False)
+    created_at = Column(DateTime , default=func.now())

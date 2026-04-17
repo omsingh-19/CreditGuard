@@ -4,7 +4,7 @@ from fastapi import APIRouter , Depends , File , UploadFile , HTTPException
 from sqlalchemy.orm import Session
 from Api.db.session import get_db
 from Api.db.models import CreditPrediction
-from Api.schema.credit import CreditInput ,CreditResponse ,CreditHistoryResponse
+from Api.schemas.credit import CreditInput ,CreditResponse ,CreditHistoryResponse
 from Api.config import settings
 import os
 

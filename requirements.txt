@@ -12,3 +12,6 @@ asyncpg
 sqlalchemy[asyncio]
 alembic
 psycopg2-binary
+bcrypt==4.0.1
+python-jose[cryptography]
+pydantic[email]
