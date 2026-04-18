@@ -7,6 +7,7 @@ from Api.db.models import CreditPrediction
 from Api.schemas.credit import CreditInput ,CreditResponse ,CreditHistoryResponse
 from Api.config import settings
 import os
+import mlflow
 
 
 model = joblib.load(settings.model_path)
@@ -44,7 +45,7 @@ def get_prediction(input_data : CreditInput)->CreditResponse:
 
 router = APIRouter(prefix="/credit",tags=["credit"])
 @router.post("/predict",response_model=CreditResponse)
-def credit_prediction(
+async def credit_prediction(
     input_data : CreditInput ,
     db : Session=Depends(get_db)
 ):
@@ -68,8 +69,8 @@ def credit_prediction(
     )
     
     db.add(data)
-    db.commit()
-    db.refresh(data)
+    await db.commit()
+    await db.refresh(data)
 
     return prediction
 
@@ -124,3 +125,33 @@ def predict_batch(file : UploadFile = File(...)):
         })
 
     return results
+
+@router.get("/model/runs")
+def get_model_runs(limit : int =5):
+
+    runs_df = mlflow.search_runs(experiment_names=["creditguard-credit-risk"])
+
+    if runs_df.empty: 
+        return []
+
+    columns = [
+        "run_id",
+        "start_time",
+        "metrics.auc_roc",
+        "metrics.best_threshold",
+        "metrics.precision_class_1",
+        "metrics.recall_class_1",
+        "params.n_estimators",
+        "params.learning_rate",
+        "params.max_depth"
+    ]
+
+    runs_df["start_time"] = runs_df["start_time"].astype(str)
+
+    runs_df = runs_df[columns]
+
+    run_limited = runs_df.head(limit)
+
+    run_dict = run_limited.to_dict(orient="records")
+
+    return run_dict
