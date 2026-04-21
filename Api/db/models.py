@@ -22,6 +22,7 @@ class CreditPrediction(Base):
     prediction = Column(Integer)
     created_at = Column(DateTime, default=func.now())
 
+
 class User(Base):
 
     __tablename__ = "user"
@@ -33,3 +34,19 @@ class User(Base):
     is_active = Column(Boolean , default= True)
     is_verified = Column(Boolean , default=False)
     created_at = Column(DateTime , default=func.now())
+
+class FraudPrediction(Base):
+
+    __tablename__ = "fraud_predictions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    amount = Column(Float, nullable=False)
+    time = Column(Float, nullable=False)
+
+    fraud_probability = Column(Float, nullable=False)
+    risk_label = Column(String, nullable=False)
+    prediction = Column(Integer, nullable=False)
+    threshold_used = Column(Float, nullable=False)
+
+    created_at = Column(DateTime, default=func.now())

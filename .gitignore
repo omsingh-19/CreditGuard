@@ -1,6 +1,6 @@
 Model/*.pkl
 Model/*.joblib
-Data/*.csv
+Data/raw/*.csv
 venv/
 q.ipynb
 test.ipynb

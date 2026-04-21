@@ -10,8 +10,8 @@ import os
 import mlflow
 
 
-model = joblib.load(settings.model_path)
-threshold = joblib.load(settings.threshold_path)
+model = joblib.load(settings.credit_model_path)
+threshold = joblib.load(settings.credit_threshold_path)
 
 def get_prediction(input_data : CreditInput)->CreditResponse:
 

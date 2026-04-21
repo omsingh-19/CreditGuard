@@ -8,8 +8,10 @@ class Settings(BaseSettings):
 
     database_url: str
     secret_key: str
-    model_path: str
-    threshold_path: str
+    credit_model_path: str
+    credit_threshold_path: str
     mlflow_tracking_uri: str
+    fraud_model_path : str
+    fraud_threshold_path : str
 
 settings = Settings()

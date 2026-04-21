@@ -107,8 +107,8 @@ def Train_Model():
         mlflow.sklearn.log_model(pipeline,"credit_pipeline")
 
         #Saving Model
-        joblib.dump(pipeline, settings.model_path)
-        joblib.dump(best_threshold, settings.threshold_path)
+        joblib.dump(pipeline, settings.credit_model_path)
+        joblib.dump(best_threshold, settings.credit_threshold_path)
         print("Model Saved Successfully")
 
 if __name__ == "__main__":
