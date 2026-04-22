@@ -28,9 +28,10 @@ def clean_data():
 
 def Train_Model():
 
+    mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
     mlflow.set_experiment("creditguard-credit-risk")
 
-    with mlflow.start_run():
+    with mlflow.start_run() as run:
     
 
         #load data and preprocessing
@@ -111,5 +112,8 @@ def Train_Model():
         joblib.dump(best_threshold, settings.credit_threshold_path)
         print("Model Saved Successfully")
 
+        return run.info.run_id
+
 if __name__ == "__main__":
-    Train_Model()
+    run_id = Train_Model()
+    print(f"\n✓ Training complete. MLflow run_id: {run_id}")

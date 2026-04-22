@@ -1,6 +1,6 @@
 import joblib
 import pandas as pd
-from fastapi import APIRouter , Depends , File , UploadFile , HTTPException
+from fastapi import APIRouter , Depends , File , UploadFile , HTTPException,BackgroundTasks
 from sqlalchemy.orm import Session
 from Api.db.session import get_db
 from Api.db.models import CreditPrediction
@@ -8,10 +8,23 @@ from Api.schemas.credit import CreditInput ,CreditResponse ,CreditHistoryRespons
 from Api.config import settings
 import os
 import mlflow
+import numpy as np
+from Api.routes.auth import get_current_user
+from Api.db.models import User
 
 
 model = joblib.load(settings.credit_model_path)
 threshold = joblib.load(settings.credit_threshold_path)
+
+def reload_credit_model():
+
+    """Reload the credit model and threshold from disk into global scope"""
+    global model, threshold
+    model = joblib.load(settings.credit_model_path)
+    threshold = joblib.load(settings.credit_threshold_path)
+
+    return {"model_reloaded": True, "threshold": float(threshold)}
+
 
 def get_prediction(input_data : CreditInput)->CreditResponse:
 
@@ -127,11 +140,12 @@ def predict_batch(file : UploadFile = File(...)):
     return results
 
 @router.get("/model/runs")
-def get_model_runs(limit : int =5):
+def get_model_runs(limit: int = 5):
 
     runs_df = mlflow.search_runs(experiment_names=["creditguard-credit-risk"])
+    runs_df = runs_df.dropna(subset=["metrics.auc_roc"])
 
-    if runs_df.empty: 
+    if runs_df.empty:
         return []
 
     columns = [
@@ -150,8 +164,68 @@ def get_model_runs(limit : int =5):
 
     runs_df = runs_df[columns]
 
+    # 🔥 FIX HERE
+    runs_df = runs_df.fillna(0)
+
     run_limited = runs_df.head(limit)
 
-    run_dict = run_limited.to_dict(orient="records")
+    return run_limited.to_dict(orient="records")
 
-    return run_dict
+@router.post("/retrain")
+async def retrain_credit_model(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+):
+    """Trigger credit model retraining in background"""
+    
+    def train_in_background():
+        from Model.train import Train_Model
+        run_id = Train_Model()
+        print(f"✓ Credit model retrained. MLflow run_id: {run_id}")
+    
+    background_tasks.add_task(train_in_background)
+    
+    return {
+        "status": "training_started",
+        "message": "Credit model retraining started in background. Check /credit/model/runs for progress."
+    }
+
+
+@router.post("/model/promote/{run_id}")
+async def promote_credit_model(
+    run_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Promote a specific MLflow run to production"""
+    
+    try:
+        # Load model from MLflow
+        model_uri = f"runs:/{run_id}/credit_pipeline"
+        loaded_model = mlflow.sklearn.load_model(model_uri)
+        
+        # Get metrics from the run
+        client = mlflow.tracking.MlflowClient()
+        run = client.get_run(run_id)
+        threshold_value = run.data.metrics.get("best_threshold")
+        auc_score = run.data.metrics.get("auc_roc")
+        
+        if threshold_value is None:
+            raise HTTPException(status_code=400, detail="Run missing best_threshold metric")
+        
+        # Save to production paths
+        joblib.dump(loaded_model, settings.credit_model_path)
+        joblib.dump(threshold_value, settings.credit_threshold_path)
+        
+        # Reload global model
+        reload_result = reload_credit_model()
+        
+        return {
+            "status": "promoted",
+            "run_id": run_id,
+            "auc_roc": auc_score,
+            "threshold": threshold_value,
+            "model_reloaded": reload_result["model_reloaded"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Promotion failed: {str(e)}")

@@ -20,12 +20,12 @@ def load_data():
 
     return df
 
-def train_model():
+def Train_Model():
 
     mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
     mlflow.set_experiment("creditguard-fraud")
 
-    with mlflow.start_run():
+    with mlflow.start_run() as run:
 
         df = load_data()
         col_to_scale = ["Amount","Time"]
@@ -88,6 +88,9 @@ def train_model():
         joblib.dump(pipeline, settings.fraud_model_path)
         joblib.dump(best_threshold, settings.fraud_threshold_path)
         print("Model Saved Successfully")
-        
-if __name__ =="__main__":
-    train_model()
+        return run.info.run_id 
+    
+if __name__ == "__main__":
+    run_id = Train_Model()
+    print(f"\n✓ Training complete. MLflow run_id: {run_id}")
+
