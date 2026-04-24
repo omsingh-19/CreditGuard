@@ -20,3 +20,4 @@ passlib[bcrypt]
 ruff
 aiosqlite
 httpx
+pytest
