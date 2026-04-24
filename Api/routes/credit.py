@@ -6,9 +6,7 @@ from Api.db.session import get_db
 from Api.db.models import CreditPrediction
 from Api.schemas.credit import CreditInput ,CreditResponse ,CreditHistoryResponse
 from Api.config import settings
-import os
 import mlflow
-import numpy as np
 from Api.routes.auth import get_current_user
 from Api.db.models import User
 
