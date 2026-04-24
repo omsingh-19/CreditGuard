@@ -17,3 +17,4 @@ python-jose[cryptography]
 pydantic[email]
 mlflow
 passlib[bcrypt]
+ruff
