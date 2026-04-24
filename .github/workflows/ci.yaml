@@ -14,6 +14,24 @@ jobs:
           python-version: "3.11"
       - run: pip install ruff
       - run: ruff check . --exclude alembic
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///./test.db
+          SECRET_KEY: test-secret-key
+          MLFLOW_TRACKING_URI: http://localhost:5000
+          CREDIT_MODEL_PATH: Model/credit_pipeline.pkl
+          CREDIT_THRESHOLD_PATH: Model/credit_threshold.pkl
+          FRAUD_MODEL_PATH: Model/fraud_model.pkl
+          FRAUD_THRESHOLD_PATH: Model/fraud_thresholds.pkl
 
   docker-build:
     runs-on: ubuntu-latest

@@ -18,3 +18,5 @@ pydantic[email]
 mlflow
 passlib[bcrypt]
 ruff
+aiosqlite
+httpx
