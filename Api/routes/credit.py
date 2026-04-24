@@ -11,8 +11,12 @@ from Api.routes.auth import get_current_user
 from Api.db.models import User
 
 
-model = joblib.load(settings.credit_model_path)
-threshold = joblib.load(settings.credit_threshold_path)
+try:
+    model = joblib.load(settings.credit_model_path)
+    threshold = joblib.load(settings.credit_threshold_path)
+except FileNotFoundError:
+    model = None
+    threshold = None
 
 def reload_credit_model():
 

@@ -12,9 +12,12 @@ import mlflow.sklearn
 
 router = APIRouter(prefix="/fraud", tags=["fraud"])
 
-model = joblib.load(settings.fraud_model_path)
-threshold = joblib.load(settings.fraud_threshold_path)
-
+try:
+    model = joblib.load(settings.fraud_model_path)
+    threshold = joblib.load(settings.fraud_threshold_path)
+except FileNotFoundError:
+    model = None
+    threshold = None
 
 def reload_fraud_model():
     """Reload the fraud model and threshold from disk into global scope"""
