@@ -1,15 +1,16 @@
-from fastapi import APIRouter , Depends
-from Api.db.session import get_db
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from Api.db.models import User
-from datetime import datetime , timedelta
 from sqlalchemy.future import select
-from fastapi.exceptions import HTTPException
-from Api.schemas.auth import UserRegister , UserOut  , UserLogin , TokenResponse
-from passlib.context import CryptContext
-from jose import jwt , JWTError
-from fastapi.security import OAuth2PasswordBearer
+from datetime import datetime, timedelta
+
+from Api.db.session import get_db
+from Api.db.models import User
+from Api.schemas.auth import UserRegister, UserOut, TokenResponse
 from Api.config import settings
+
+from passlib.context import CryptContext
+from jose import jwt, JWTError
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 
 pwd_context = CryptContext(schemes=["bcrypt"])
@@ -17,51 +18,55 @@ pwd_context = CryptContext(schemes=["bcrypt"])
 SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 
 async def get_current_user(
-        token : str = Depends(oauth2_scheme),
-        db : AsyncSession = Depends(get_db)
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
 ):
-    credential_error = HTTPException(401 , detail="Invalid Credentials")
+    credentials_error = HTTPException(
+        status_code=401,
+        detail="Invalid credentials"
+    )
 
-    try: 
-        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-        email : str = payload.get("sub")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
 
-        if not email:
-            raise credential_error
-        
+        if email is None:
+            raise credentials_error
+
     except JWTError:
-        raise credential_error
-    
-    result =await db.execute(select(User).where(User.email==email))
+        raise credentials_error
+
+    result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 
-    if not user:
-        raise credential_error
-    
+    if user is None:
+        raise credentials_error
+
     return user
 
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-
-router = APIRouter(prefix="/auth",tags=["auth"])
-@router.post("/register",response_model=UserOut)
+@router.post("/register", response_model=UserOut)
 async def user_register(
-    user_input : UserRegister ,
-    db : AsyncSession = Depends(get_db)
+    user_input: UserRegister,
+    db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).where(User.email == user_input.email))
     existing_user = result.scalar_one_or_none()
 
     if existing_user:
-        raise HTTPException(400 , detail= "Email already exists")
+        raise HTTPException(status_code=400, detail="Email already exists")
 
     new_user = User(
-        email = user_input.email,
-        hashed_password = pwd_context.hash(user_input.password),
-        is_active = True,
-        is_verified = False)
+        email=user_input.email,
+        hashed_password=pwd_context.hash(user_input.password),
+        is_active=True,
+        is_verified=False
+    )
 
     db.add(new_user)
     await db.commit()
@@ -69,31 +74,32 @@ async def user_register(
 
     return new_user
 
-@router.post("/login",response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse)
 async def user_login(
-    user_login_info : UserLogin,
-    db : AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(),  
+    db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(User).where(User.email == user_login_info.email))
-    existing_user_info = result.scalar_one_or_none()
+    result = await db.execute(select(User).where(User.email == form_data.username))
+    user = result.scalar_one_or_none()
 
-    if not existing_user_info:
-        raise HTTPException(401 , detail= "Incorrect Email")
-    
-    if not pwd_context.verify(user_login_info.password,existing_user_info.hashed_password):
-        raise HTTPException(401 , "Invalid Credentials")
-    
+    if not user:
+        raise HTTPException(status_code=401, detail="Incorrect email")
+
+    if not pwd_context.verify(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
     payload = {
-        "sub": user_login_info.email,
+        "sub": user.email,
         "exp": datetime.utcnow() + timedelta(minutes=60)
     }
 
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    access_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-    return TokenResponse(access_token=token)
-    
-@router.get("/me",response_model=UserOut)
+    return TokenResponse(access_token=access_token)
+
+
+@router.get("/me", response_model=UserOut)
 async def get_me(
-    current_user : User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return current_user

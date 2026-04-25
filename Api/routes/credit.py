@@ -1,7 +1,8 @@
 import joblib
 import pandas as pd
+from sqlalchemy import select
 from fastapi import APIRouter , Depends , File , UploadFile , HTTPException,BackgroundTasks
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from Api.db.session import get_db
 from Api.db.models import CreditPrediction
 from Api.schemas.credit import CreditInput ,CreditResponse ,CreditHistoryResponse
@@ -62,7 +63,7 @@ router = APIRouter(prefix="/credit",tags=["credit"])
 @router.post("/predict",response_model=CreditResponse)
 async def credit_prediction(
     input_data : CreditInput ,
-    db : Session=Depends(get_db)
+    db : AsyncSession=Depends(get_db)
 ):
     
     prediction = get_prediction(input_data)
@@ -89,10 +90,17 @@ async def credit_prediction(
 
     return prediction
 
-@router.get("/history",response_model=list[CreditHistoryResponse])
-def get_history(limit : int = 5, db : Session = Depends(get_db)):
+from sqlalchemy import select
 
-    records = db.query(CreditPrediction).limit(limit).all()
+@router.get("/history", response_model=list[CreditHistoryResponse])
+async def get_history(
+    limit: int = 5,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(CreditPrediction).limit(limit)
+    )
+    records = result.scalars().all()
     return records
 
 @router.get("/model/metrics")
