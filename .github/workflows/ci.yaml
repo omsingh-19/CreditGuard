@@ -2,7 +2,7 @@ name: CreditGuard V2 CI
 
 on:
   push:
-    branches: [V2]
+    branches: [main]
 
 jobs:
   lint:
