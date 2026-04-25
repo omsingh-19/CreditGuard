@@ -90,8 +90,6 @@ async def credit_prediction(
 
     return prediction
 
-from sqlalchemy import select
-
 @router.get("/history", response_model=list[CreditHistoryResponse])
 async def get_history(
     limit: int = 5,
@@ -174,7 +172,7 @@ def get_model_runs(limit: int = 5):
 
     runs_df = runs_df[columns]
 
-    # 🔥 FIX HERE
+
     runs_df = runs_df.fillna(0)
 
     run_limited = runs_df.head(limit)
