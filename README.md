@@ -1,59 +1,43 @@
-# CreditGuard — Credit Risk Intelligence Platform
+# CreditGuard V2
 
-An end-to-end Machine Learning API that predicts credit default risk for loan applicants. Built with FastAPI, XGBoost, and SQLAlchemy. Fully containerized with Docker.
-
----
-
-## Live Demo
-
-Start the server and visit `http://localhost:8000` to open the dashboard.
-
----
-
-## Features
-
-- Single applicant risk scoring with probability score and risk label (Low / Medium / High)
-- Bulk CSV prediction via batch endpoint
-- Prediction history stored in SQLite database
-- Model performance metrics endpoint
-- Fully Dockerized — runs with one command
-- Interactive dashboard served directly from the API
+A production-grade credit risk and fraud detection API built with FastAPI, XGBoost, MLflow, and Docker. Features JWT authentication, async PostgreSQL, model retraining endpoints, and a full CI pipeline.
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| ML Model | XGBoost Classifier |
-| Preprocessing | Scikit-learn Pipeline + ColumnTransformer |
-| Imbalance Handling | SMOTE (imbalanced-learn) |
-| Backend | FastAPI + Uvicorn |
-| Database | SQLite + SQLAlchemy |
-| Containerization | Docker + docker-compose |
-| Frontend | HTML/CSS/JS (see note below) |
+|---|---|
+| API | FastAPI + async SQLAlchemy |
+| Database | PostgreSQL (Docker) + Alembic migrations |
+| Auth | JWT (python-jose) + bcrypt |
+| ML | XGBoost + SMOTE (imbalanced-learn) |
+| Experiment Tracking | MLflow |
+| Containerization | Docker + Docker Compose |
+| CI | GitHub Actions (lint → test → docker build) |
+| Linting | Ruff |
 
 ---
 
-## Model Performance
+## Models
 
-| Metric | Score |
-|--------|-------|
-| AUC-ROC | 0.8309 |
-| Decision Threshold | 0.5877 |
-| Train Samples | 120,000 (after SMOTE) |
-| Test Samples | 30,000 |
+### Credit Risk Model
+- **Dataset:** Give Me Some Credit (Kaggle)
+- **Algorithm:** XGBoost + SMOTE
+- **AUC-ROC:** 0.8309
+- **Threshold:** 0.5877 (Precision-Recall optimized)
+- **MLflow Experiment:** `creditguard-credit-risk`
+- **Artifacts:** `Model/credit_pipeline.pkl`, `Model/credit_threshold.pkl`
 
-> **Note:** Medium `risk_label` with `prediction=0` is expected behavior. It means the probability is above 0.30 (Medium range) but below the decision threshold of 0.58, so the model does not predict default. This is intentional — risk label and prediction are two different things.
+> Note: A `Medium` risk label with `prediction=0` is expected behavior — probability is above 0.3 but below the 0.58 threshold.
 
----
-
-## Dataset
-
-Download **Give Me Some Credit** from Kaggle:
-https://www.kaggle.com/c/GiveMeSomeCredit/data
-
-Place `cs-training.csv` in `data/raw/`.
+### Fraud Detection Model
+- **Dataset:** ULB Creditcard (Kaggle)
+- **Algorithm:** XGBoost + SMOTE
+- **AUC-ROC:** 0.979
+- **Threshold:** 0.99 (high precision mode)
+- **MLflow Experiment:** `creditguard-fraud`
+- **Artifacts:** `Model/fraud_model.pkl`, `Model/fraud_thresholds.pkl`
 
 ---
 
@@ -61,139 +45,167 @@ Place `cs-training.csv` in `data/raw/`.
 
 ```
 CreditGuard/
-│
-├── data/raw/               # Dataset (not committed)
-├── notebooks/
-│   └── credit_eda.ipynb    # Exploratory data analysis
-│
-├── Model/                  # Saved model files (not committed)
-│   ├── credit_pipeline.pkl
-│   └── threshold.pkl
-│   └── train.py            # Model training script
-│
 ├── Api/
-│   ├── main.py             # FastAPI app entry point
 │   ├── routes/
-│   │   └── credit.py       # API endpoints
-│   ├── schemas/
-│   │   └── credit.py       # Pydantic request/response models
-│   └── db/
-│       ├── models.py        # SQLAlchemy table definitions
-│       └── session.py       # Database connection setup
-│
+│   │   ├── auth.py          # JWT auth endpoints
+│   │   ├── credit.py        # Credit risk endpoints
+│   │   └── fraud.py         # Fraud detection endpoints
+│   ├── db/
+│   │   ├── models.py        # SQLAlchemy models
+│   │   └── session.py       # Async DB session
+│   ├── schemas/             # Pydantic request/response schemas
+│   ├── config.py            # Pydantic settings (.env)
+│   └── main.py              # FastAPI app
+├── Model/
+│   ├── train.py             # Credit model training
+│   └── fraud_train.py       # Fraud model training
+├── Data/                    # Training datasets (not committed)
+├── alembic/                 # DB migrations
 ├── frontend/
-│   └── index.html          # Dashboard UI
-│
-├── Dockerfile
+│   └── index.html           # See note below
+├── tests/
+│   └── test_app.py          # CI test suite
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # GitHub Actions CI
 ├── docker-compose.yml
-└── requirements.txt
+├── Dockerfile
+├── requirements.txt
+└── .env                     # Not committed
 ```
-
----
-
-## Quickstart
-
-### Option 1 — Docker (recommended)
-
-```bash
-git clone https://github.com/omsingh-19/CreditGuard
-cd CreditGuard
-```
-
-Train the model first (required — model files are not committed):
-```bash
-pip install -r requirements.txt
-python Model/train.py
-```
-
-Then run with Docker:
-```bash
-docker-compose up --build
-```
-
-Visit `http://localhost:8000`
-
----
-
-### Option 2 — Local
-
-```bash
-pip install -r requirements.txt
-python Model/train.py
-uvicorn Api.main:app --reload
-```
-
-Visit `http://localhost:8000`
 
 ---
 
 ## API Endpoints
 
+### Auth
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/credit/predict` | Single applicant prediction |
-| POST | `/credit/predict/batch` | CSV bulk prediction |
-| GET | `/credit/history` | Prediction history (`?limit=10`) |
-| GET | `/credit/model/metrics` | Model performance stats |
+|---|---|---|
+| POST | `/auth/register` | Register a new user |
+| POST | `/auth/login` | Login, returns JWT token |
+| GET | `/auth/me` | Get current user info |
 
-### Sample Request
+### Credit Risk
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/credit/predict` | Single credit risk prediction |
+| POST | `/credit/predict/batch` | Batch prediction from CSV |
+| GET | `/credit/history` | Prediction history |
+| GET | `/credit/model/metrics` | Current model metrics |
+| GET | `/credit/model/runs` | MLflow run history |
+| POST | `/credit/retrain` | Trigger background retraining |
+| POST | `/credit/model/promote/{run_id}` | Promote MLflow run to production |
 
-```bash
-curl -X POST http://localhost:8000/credit/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "age": 45,
-    "income": 5000,
-    "debt_ratio": 0.35,
-    "revolving_utilization": 0.5,
-    "num_open_credit_lines": 4,
-    "num_real_estate_loans": 1,
-    "num_late_30_59": 0,
-    "num_late_60_89": 0,
-    "num_late_90": 0,
-    "dependents": 2
-  }'
-```
-
-### Sample Response
-
-```json
-{
-  "prediction": 0,
-  "risk_score": 0.2134,
-  "risk_label": "Low",
-  "threshold_used": 0.5877
-}
-```
+### Fraud Detection
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/fraud/predict` | Single transaction fraud check |
+| GET | `/fraud/history` | Prediction history |
+| GET | `/fraud/model/runs` | MLflow run history |
+| POST | `/fraud/retrain` | Trigger background retraining |
+| POST | `/fraud/model/promote/{run_id}` | Promote MLflow run to production |
 
 ---
 
-## Retrain the Model
+## Setup
 
-```bash
-python Model/train.py
+### Prerequisites
+- Docker + Docker Compose
+- Python 3.11+
+- Training datasets in `Data/` directory
+
+### Environment Variables
+
+Create a `.env` file at the project root:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/creditguard
+SECRET_KEY=your-secret-key-here
+CREDIT_MODEL_PATH=Model/credit_pipeline.pkl
+CREDIT_THRESHOLD_PATH=Model/credit_threshold.pkl
+MLFLOW_TRACKING_URI=http://mlflow:5000
+FRAUD_MODEL_PATH=Model/fraud_model.pkl
+FRAUD_THRESHOLD_PATH=Model/fraud_thresholds.pkl
 ```
 
-This will clean the data, train a new XGBoost pipeline with SMOTE, find the optimal threshold via precision-recall curve, and save the model to `Model/`.
+> **Note:** Use `@db:5432` inside Docker and `@localhost:5432` for local Alembic migrations.
+
+### Running with Docker
+
+```bash
+# Start all services (API, PostgreSQL, MLflow)
+docker-compose up --build
+
+# Run database migrations
+docker-compose exec api alembic upgrade head
+
+# Train the credit model
+docker-compose exec api python -m Model.train
+
+# Train the fraud model
+docker-compose exec api python -m Model.fraud_train
+```
+
+### Services
+
+| Service | URL |
+|---|---|
+| API | http://localhost:8000 |
+| API Docs | http://localhost:8000/docs |
+| MLflow UI | http://localhost:5000 |
+| Frontend | http://localhost:8000 |
+
+---
+
+## CI Pipeline
+
+GitHub Actions runs on every push to the `v2` branch:
+
+```
+push to v2
+    │
+    ▼
+ lint (ruff)          ~6s
+    │
+    ├──────────────────────┐
+    ▼                      ▼
+ test (pytest)       docker build
+    ~58s                ~1m
+```
+
+- **lint** — Ruff checks the entire codebase, excluding `alembic/`
+- **test** — Pytest runs against a SQLite test database with mocked env vars
+- **docker-build** — Confirms the Dockerfile builds cleanly
+
+---
+
+## Model Retraining Workflow
+
+1. Hit `POST /credit/retrain` or `POST /fraud/retrain` — starts training in a background task
+2. Open MLflow UI at `http://localhost:5000` and copy the `run_id` from the new run
+3. Hit `POST /credit/model/promote/{run_id}` — loads the model from MLflow, saves to disk, hot-swaps the global model in memory without restarting the API
 
 ---
 
 ## Frontend
 
-> **Disclosure:** The frontend dashboard (`frontend/index.html`) was generated using Claude (claude.ai) based on the API structure and design requirements. All backend code, ML pipeline, and API logic was written manually.
+> ⚠️ **The frontend (`frontend/index.html`) was not written by me.** It was generated by Claude (Anthropic) as part of the development process. The UI covers all API functionality — auth, credit risk prediction, fraud detection, prediction history, MLflow run inspection, and model retrain/promote controls.
+
+The frontend is a single static HTML file served by FastAPI at the root route. No framework, no build step.
+
+---
+
+## Development Notes
+
+- Models load lazily at startup — if `.pkl` files are missing the app starts with `model=None` instead of crashing
+- Async throughout: `AsyncSession` for all DB operations
+- Batch prediction endpoint accepts CSV uploads
+- MLflow runs store: `auc_roc`, `best_threshold`, `precision_class_1`, `recall_class_1`, `n_estimators`, `learning_rate`, `max_depth`
+- NaN values in MLflow run DataFrames are replaced with `None` before JSON serialization
 
 ---
 
 ## Author
 
-**Om Singh Lodhi**
-
-1st Year AI-DS Student — SDSF, DAVV, Indore
-
-
----
-
-## License
-
-Free to use for learning and educational purposes.
+**Om Singh** — 1st year AI-DS, SDSF DAVV, Indore  
+GitHub: [@omsingh-19](https://github.com/omsingh-19)

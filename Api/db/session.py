@@ -1,18 +1,16 @@
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import declarative_base , sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine , async_sessionmaker
+from sqlalchemy.orm import declarative_base 
+from Api.config import settings
 
-URL = "sqlite:///./CreditGuard.db"
+URL = settings.database_url
 
-engine = create_engine(URL,connect_args={"check_same_thread": False})
+engine = create_async_engine(URL)
 
-session_local = sessionmaker(bind = engine,autoflush=False,autocommit=False)
+session_local = async_sessionmaker(bind = engine,autoflush=False,autocommit=False,expire_on_commit=False)
 
 Base = declarative_base()
 
-def get_db():
-    db = session_local()
-    try: 
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    async with session_local() as session:
+        yield session
     

@@ -7,3 +7,17 @@ fastapi
 uvicorn
 pydantic
 python-multipart
+pydantic-settings
+asyncpg
+sqlalchemy[asyncio]
+alembic
+psycopg2-binary
+bcrypt==4.0.1
+python-jose[cryptography]
+pydantic[email]
+mlflow
+passlib[bcrypt]
+ruff
+aiosqlite
+httpx
+pytest
