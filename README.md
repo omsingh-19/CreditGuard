@@ -59,7 +59,7 @@ CreditGuard/
 ├── Model/
 │   ├── train.py             # Credit model training
 │   └── fraud_train.py       # Fraud model training
-├── Data/                    # Training datasets (not committed)
+├── Data/raw                 # Training datasets (not committed)
 ├── alembic/                 # DB migrations
 ├── frontend/
 │   └── index.html           # See note below
@@ -68,9 +68,16 @@ CreditGuard/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml           # GitHub Actions CI
+├── notebooks/
+│   └── credit_eda.ipynb
+├── mlartifacts/
+├── mlruns/
+├── .gitignore
+├── alembic.ini
 ├── docker-compose.yml
 ├── Dockerfile
 ├── requirements.txt
+├── ruff.toml
 └── .env                     # Not committed
 ```
 
