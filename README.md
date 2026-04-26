@@ -159,10 +159,10 @@ docker-compose exec api python -m Model.fraud_train
 
 ## CI Pipeline
 
-GitHub Actions runs on every push to the `v2` branch:
+GitHub Actions runs on every push to the `main` branch:
 
 ```
-push to v2
+push to main
     │
     ▼
  lint (ruff)          ~6s
